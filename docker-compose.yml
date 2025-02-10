@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+    app-xml:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: xml-app
+        restart: unless-stopped
+        working_dir: /var/www/html
+        volumes:
+            - .:/var/www/html
+            - ./docker/php/custom.ini:/usr/local/etc/php/php.ini-production
+            - ./docker/php/custom.ini:/usr/local/etc/php/php.ini-development
+            - ./docker/supervisor.conf:/etc/supervisor/conf.d/laravel-worker.conf
+        networks:
+            - laravel
+
+    supervisor-xml:
+        build:
+            context: .
+            dockerfile: DockerfileQueues
+        container_name: xml-supervisor
+        restart: unless-stopped
+        working_dir: /var/www/html
+        volumes:
+            - .:/var/www/html
+            - ./docker/supervisor.conf:/etc/supervisor/conf.d/laravel-worker.conf
+        networks:
+            - laravel
+
+    webserver-xml:
+        image: nginx:alpine
+        container_name: xml-webserver
+        restart: unless-stopped
+        ports:
+            - "80:80"
+        volumes:
+            - .:/var/www/html
+            - ./docker/nginx:/etc/nginx/conf.d
+        networks:
+            - laravel
+
+    db-xml:
+        image: mysql:8.0
+        container_name: xml-db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: laravel
+            MYSQL_ROOT_PASSWORD: secret
+        volumes:
+            - dbdata:/var/lib/mysql
+        ports:
+            - "3306:3306"
+        networks:
+            - laravel
+
+    redis-xml:
+        image: redis:alpine
+        container_name: xml-redis
+        restart: unless-stopped
+        networks:
+            - laravel
+
+volumes:
+    dbdata:
+        driver: local
+
+networks:
+    laravel:
+        driver: bridge
