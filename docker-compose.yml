@@ -12,7 +12,6 @@ services:
             - .:/var/www/html
             - ./docker/php/custom.ini:/usr/local/etc/php/php.ini-production
             - ./docker/php/custom.ini:/usr/local/etc/php/php.ini-development
-            - ./docker/supervisor.conf:/etc/supervisor/conf.d/laravel-worker.conf
         networks:
             - laravel
 
@@ -26,6 +25,22 @@ services:
         volumes:
             - .:/var/www/html
             - ./docker/supervisor.conf:/etc/supervisor/conf.d/laravel-worker.conf
+        networks:
+            - laravel
+
+    websockets-xml:
+        build:
+            context: .
+            dockerfile: Dockerfile.websockets
+        container_name: xml-websockets
+        restart: unless-stopped
+        working_dir: /var/www/html
+        depends_on:
+            - redis-xml
+        ports:
+            - "6001:6001"
+        volumes:
+            - .:/var/www/html
         networks:
             - laravel
 
